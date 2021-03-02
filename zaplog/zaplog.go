@@ -22,9 +22,6 @@ func NewZapLogger(name string, devMode bool, logLevel string, opts ...ModOptions
 		level = zap.DPanicLevel
 	}
 
-	var logOpts []ModOptions
-	logOpts = append(logOpts, SetAppName(name), SetDevelopment(devMode), SetLevel(level))
-	logOpts = append(logOpts, opts...)
-
-	return NewLogger(logOpts...)
+	mopts := append([]zaplog.ModOptions{SetAppName(name), SetDevelopment(devMode), SetLevel(level)}, opts...)
+	return NewLogger(mopts...)
 }
