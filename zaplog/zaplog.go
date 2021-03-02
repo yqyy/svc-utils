@@ -7,7 +7,7 @@ import (
 )
 
 // NewZapLogger creates a logger
-func NewZapLogger(name string, devMode bool, logLevel string) *zap.Logger {
+func NewZapLogger(name string, devMode bool, logLevel string, opts ...ModOptions) *zap.Logger {
 	level := zap.DebugLevel
 	switch strings.ToUpper(logLevel) {
 	case "DEBUG":
@@ -22,11 +22,9 @@ func NewZapLogger(name string, devMode bool, logLevel string) *zap.Logger {
 		level = zap.DPanicLevel
 	}
 
-	logger := NewLogger(
-		SetAppName(name),
-		SetDevelopment(devMode),
-		SetLevel(level),
-	)
+	var logOpts []ModOptions
+	logOpts = append(logOpts, SetAppName(name), SetDevelopment(devMode), SetLevel(level))
+	logOpts = append(logOpts, opts...)
 
-	return logger
+	return NewLogger(logOpts...)
 }

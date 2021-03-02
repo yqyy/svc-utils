@@ -11,32 +11,36 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+// Options log options
 type Options struct {
-	LogFileDir    string //文件保存地方
-	AppName       string //日志文件前缀
-	ErrorFileName string
-	WarnFileName  string
-	InfoFileName  string
-	DebugFileName string
-	Level         zapcore.Level //日志等级
-	MaxSize       int           //日志文件小大（M）
-	MaxBackups    int           // 最多存在多少个切片文件
-	MaxAge        int           //保存的最大天数
-	Development   bool          //是否是开发模式
+	LogFileDir     string //文件保存地方
+	AppName        string //日志文件前缀
+	DPanicFileName string
+	ErrorFileName  string
+	WarnFileName   string
+	InfoFileName   string
+	DebugFileName  string
+	Level          zapcore.Level //日志等级
+	MaxSize        int           //日志文件小大（M）
+	MaxBackups     int           // 最多存在多少个切片文件
+	MaxAge         int           //保存的最大天数
+	Development    bool          //是否是开发模式
 	zap.Config
 }
 
+// ModOptions log options
 type ModOptions func(options *Options)
 
 var (
-	l                              *Logger
+	l                              *logger
 	sp                             = string(filepath.Separator)
 	errWS, warnWS, infoWS, debugWS zapcore.WriteSyncer       // IO输出
 	debugConsoleWS                 = zapcore.Lock(os.Stdout) // 控制台标准输出
 	errorConsoleWS                 = zapcore.Lock(os.Stderr)
 )
 
-type Logger struct {
+// logger logger struct
+type logger struct {
 	*zap.Logger
 	sync.RWMutex
 	Opts      *Options `json:"opts"`
@@ -44,8 +48,9 @@ type Logger struct {
 	inited    bool
 }
 
+// NewLogger create a new logger
 func NewLogger(mod ...ModOptions) *zap.Logger {
-	l = &Logger{}
+	l = &logger{}
 	l.Lock()
 	defer l.Unlock()
 	if l.inited {
@@ -53,16 +58,17 @@ func NewLogger(mod ...ModOptions) *zap.Logger {
 		return nil
 	}
 	l.Opts = &Options{
-		LogFileDir:    "",
-		AppName:       "app_log",
-		ErrorFileName: "error.log",
-		WarnFileName:  "warn.log",
-		InfoFileName:  "info.log",
-		DebugFileName: "debug.log",
-		Level:         zapcore.DebugLevel,
-		MaxSize:       10,
-		MaxBackups:    30,
-		MaxAge:        30,
+		LogFileDir:     "",
+		AppName:        "app_log",
+		DPanicFileName: "dpanic.log",
+		ErrorFileName:  "error.log",
+		WarnFileName:   "warn.log",
+		InfoFileName:   "info.log",
+		DebugFileName:  "debug.log",
+		Level:          zapcore.DebugLevel,
+		MaxSize:        10,
+		MaxBackups:     30,
+		MaxAge:         30,
 	}
 	if l.Opts.LogFileDir == "" {
 		l.Opts.LogFileDir, _ = filepath.Abs(filepath.Dir(filepath.Join(".")))
@@ -91,7 +97,7 @@ func NewLogger(mod ...ModOptions) *zap.Logger {
 	return l.Logger
 }
 
-func (l *Logger) init() {
+func (l *logger) init() {
 	l.setSyncers()
 	var err error
 	l.Logger, err = l.zapConfig.Build(l.cores())
@@ -101,7 +107,7 @@ func (l *Logger) init() {
 	defer l.Logger.Sync()
 }
 
-func (l *Logger) setSyncers() {
+func (l *logger) setSyncers() {
 	f := func(fN string) zapcore.WriteSyncer {
 		return zapcore.AddSync(&lumberjack.Logger{
 			Filename:   l.Opts.LogFileDir + sp + l.Opts.AppName + "-" + fN,
@@ -118,66 +124,92 @@ func (l *Logger) setSyncers() {
 	debugWS = f(l.Opts.DebugFileName)
 	return
 }
+
+// SetMaxSize log max size
 func SetMaxSize(MaxSize int) ModOptions {
 	return func(option *Options) {
 		option.MaxSize = MaxSize
 	}
 }
+
+// SetMaxBackups log max backups
 func SetMaxBackups(MaxBackups int) ModOptions {
 	return func(option *Options) {
 		option.MaxBackups = MaxBackups
 	}
 }
+
+// SetMaxAge log max age
 func SetMaxAge(MaxAge int) ModOptions {
 	return func(option *Options) {
 		option.MaxAge = MaxAge
 	}
 }
 
+// SetLogFileDir log dir
 func SetLogFileDir(LogFileDir string) ModOptions {
 	return func(option *Options) {
 		option.LogFileDir = LogFileDir
 	}
 }
 
+// SetAppName app name
 func SetAppName(AppName string) ModOptions {
 	return func(option *Options) {
 		option.AppName = AppName
 	}
 }
 
+// SetLevel log level
 func SetLevel(Level zapcore.Level) ModOptions {
 	return func(option *Options) {
 		option.Level = Level
 	}
 }
+
+// SetDPanicFileName DPanic file name
+func SetDPanicFileName(DPanicFileName string) ModOptions {
+	return func(option *Options) {
+		option.DPanicFileName = DPanicFileName
+	}
+}
+
+// SetErrorFileName Error file name
 func SetErrorFileName(ErrorFileName string) ModOptions {
 	return func(option *Options) {
 		option.ErrorFileName = ErrorFileName
 	}
 }
+
+// SetWarnFileName Warn file name
 func SetWarnFileName(WarnFileName string) ModOptions {
 	return func(option *Options) {
 		option.WarnFileName = WarnFileName
 	}
 }
 
+// SetInfoFileName Info file name
 func SetInfoFileName(InfoFileName string) ModOptions {
 	return func(option *Options) {
 		option.InfoFileName = InfoFileName
 	}
 }
+
+// SetDebugFileName Debug file name
 func SetDebugFileName(DebugFileName string) ModOptions {
 	return func(option *Options) {
 		option.DebugFileName = DebugFileName
 	}
 }
+
+// SetDevelopment Development mode
 func SetDevelopment(Development bool) ModOptions {
 	return func(option *Options) {
 		option.Development = Development
 	}
 }
-func (l *Logger) cores() zap.Option {
+
+func (l *logger) cores() zap.Option {
 	fileEncoder := zapcore.NewJSONEncoder(l.zapConfig.EncoderConfig)
 	//consoleEncoder := zapcore.NewConsoleEncoder(l.zapConfig.EncoderConfig)
 	encoderConfig := zap.NewDevelopmentEncoderConfig()
