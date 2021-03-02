@@ -1,4 +1,4 @@
-module github.com/yqyy/utils-svc
+module github.com/yqyy/svc-utils
 
 go 1.16
 
