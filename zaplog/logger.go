@@ -58,7 +58,7 @@ func NewLogger(mod ...ModOptions) *zap.Logger {
 		return nil
 	}
 	l.Opts = &Options{
-		LogFileDir:     "/var/log/",
+		LogFileDir:     "/var/log/app/",
 		AppName:        "app",
 		DPanicFileName: "dpanic.log",
 		ErrorFileName:  "error.log",
