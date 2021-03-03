@@ -58,8 +58,8 @@ func NewLogger(mod ...ModOptions) *zap.Logger {
 		return nil
 	}
 	l.Opts = &Options{
-		LogFileDir:     "",
-		AppName:        "app_log",
+		LogFileDir:     "/var/log/",
+		AppName:        "app",
 		DPanicFileName: "dpanic.log",
 		ErrorFileName:  "error.log",
 		WarnFileName:   "warn.log",
@@ -69,10 +69,6 @@ func NewLogger(mod ...ModOptions) *zap.Logger {
 		MaxSize:        10,
 		MaxBackups:     30,
 		MaxAge:         30,
-	}
-	if l.Opts.LogFileDir == "" {
-		l.Opts.LogFileDir, _ = filepath.Abs(filepath.Dir(filepath.Join(".")))
-		l.Opts.LogFileDir += sp + "logs" + sp
 	}
 	if l.Opts.Development {
 		l.zapConfig = zap.NewDevelopmentConfig()
