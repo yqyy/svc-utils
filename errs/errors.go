@@ -18,6 +18,11 @@ func New(code int, msg string) error {
 	}
 }
 
+func Is(err error) bool {
+	_, ok := err.(commonErr)
+	return ok
+}
+
 func GetCode(err error) int {
 	if e, ok := err.(commonErr); ok {
 		return e.code
