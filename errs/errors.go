@@ -3,7 +3,7 @@ package errs
 import "fmt"
 
 type commonErr struct {
-	code int
+	code int32
 	msg  string
 }
 
@@ -11,7 +11,7 @@ func (e commonErr) Error() string {
 	return fmt.Sprintf("code:%d,msg:%v", e.code, e.msg)
 }
 
-func New(code int, msg string) error {
+func New(code int32, msg string) error {
 	return commonErr{
 		code: code,
 		msg:  msg,
@@ -23,7 +23,7 @@ func Is(err error) bool {
 	return ok
 }
 
-func GetCode(err error) int {
+func GetCode(err error) int32 {
 	if e, ok := err.(commonErr); ok {
 		return e.code
 	}
